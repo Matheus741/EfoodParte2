@@ -2,7 +2,6 @@ import styled from 'styled-components'
 import { colors } from '../../styles/colors'
 import estrela from '../../assets/images/estrela.svg'
 
-// Mantenha suas variáveis
 const CARD_W = 472
 const CARD_H = 398
 const IMG_H = 217
@@ -97,8 +96,12 @@ export const Description = styled.p`
   font-size: 14px;
   line-height: 22px;
   color: ${colors.primary};
-  width: 456px; 
   margin-bottom: 16px;
+  flex: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 `
 
 export const Cta = styled.button`

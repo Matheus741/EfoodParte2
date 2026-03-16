@@ -1,67 +1,112 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+
 import Footer from '../../components/Footer'
 import DishCard from '../../components/DishCard'
 import Checkout from '../../components/Checkout'
-import { useCart } from '../../context/CartContext'
+import { Dish, useCart } from '../../context/CartContext'
 
-import { 
-  Banner, Overlay, BannerContent, Category, Title, Container, List, 
-  HeaderContainer, HeaderContent, LinkHeader, Logo 
+import {
+  Banner,
+  Overlay,
+  BannerContent,
+  Category,
+  Title,
+  Container,
+  List,
+  HeaderContainer,
+  HeaderContent,
+  LinkHeader,
+  Logo
 } from './styles'
 
-import logoImg from '../../assets/images/logo.svg' 
-import bannerImg from '../../assets/images/macarrao2.png'
-import pizzaImg from '../../assets/images/pizza.png'
+import logoImg from '../../assets/images/logo.svg'
+
+type RestaurantData = {
+  id: number
+  titulo: string
+  tipo: string
+  capa: string
+  cardapio: Array<Dish & { porcao: string }>
+}
 
 const Restaurant = () => {
-  const { items, isOpen, closeCart } = useCart()
+  const { id } = useParams()
+  const { items, isOpen, closeCart, openCart } = useCart()
 
-  const restaurant = {
-    title: 'La Dolce Vita Trattoria',
-    category: 'Italiana',
-    banner: bannerImg
-  }
+  const [restaurants, setRestaurants] = useState<RestaurantData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
-  const dishData = {
-    id: 1,
-    nome: "Pizza Margherita",
-    descricao: "A clássica Marguerita: molho de tomate suculento, mussarela derretida, manjericão fresco e um toque de azeite. Sabor e simplicidade!",
-    foto: pizzaImg,
-    preco: 60.9
-  }
-  
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      try {
+        const response = await fetch('https://api-ebac.vercel.app/api/efood/restaurantes')
+
+        if (!response.ok) {
+          throw new Error('Falha ao carregar restaurante')
+        }
+
+        const data = (await response.json()) as RestaurantData[]
+        setRestaurants(data)
+      } catch (error) {
+        setHasError(true)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadRestaurants()
+  }, [])
+
+  const selectedRestaurant = useMemo(
+    () => restaurants.find((restaurant) => restaurant.id === Number(id)),
+    [restaurants, id]
+  )
 
   return (
     <>
       <HeaderContainer>
         <HeaderContent>
-          <LinkHeader href="/">Restaurantes</LinkHeader>
+          <LinkHeader as={Link} to="/">
+            Restaurantes
+          </LinkHeader>
           <Logo src={logoImg} alt="efood" />
-          <LinkHeader as="span">{items.length} produto(s) no carrinho</LinkHeader>
+          <LinkHeader as="button" type="button" onClick={openCart}>
+            {items.length} produto(s) no carrinho
+          </LinkHeader>
         </HeaderContent>
       </HeaderContainer>
 
-      <Banner style={{ backgroundImage: `url(${restaurant.banner})` }}>
-        <Overlay />
-        <BannerContent>
-          <Category>{restaurant.category}</Category>
-          <Title>{restaurant.title}</Title>
-        </BannerContent>
-      </Banner>
+      {isLoading && <Container>Carregando restaurante...</Container>}
+      {hasError && <Container>Não foi possível carregar o restaurante.</Container>}
 
-      <Container>
-        <List>
-          <DishCard dish={dishData} />
-          <DishCard dish={dishData} />
-          <DishCard dish={dishData} />
-          <DishCard dish={dishData} />
-          <DishCard dish={dishData} />
-          <DishCard dish={dishData} />
-        </List>
-      </Container>
+      {!isLoading && !hasError && selectedRestaurant && (
+        <>
+          <Banner style={{ backgroundImage: `url(${selectedRestaurant.capa})` }}>
+            <Overlay />
+            <BannerContent>
+              <Category>{selectedRestaurant.tipo}</Category>
+              <Title>{selectedRestaurant.titulo}</Title>
+            </BannerContent>
+          </Banner>
+
+          <Container>
+            <List>
+              {selectedRestaurant.cardapio.map((dish) => (
+                <DishCard key={dish.id} dish={dish} />
+              ))}
+            </List>
+          </Container>
+        </>
+      )}
+
+      {!isLoading && !hasError && !selectedRestaurant && (
+        <Container>Restaurante não encontrado.</Container>
+      )}
 
       <Footer />
       <Checkout isOpen={isOpen} onClose={closeCart} />
-    
     </>
   )
 }

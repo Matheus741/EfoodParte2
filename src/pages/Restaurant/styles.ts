@@ -25,6 +25,9 @@ export const HeaderContent = styled.div`
 `
 
 export const LinkHeader = styled.a`
+  background: transparent;
+  border: 0;
+  cursor: pointer;
   font-family: 'Roboto', sans-serif;
   font-size: 18px;
   font-weight: 900; 

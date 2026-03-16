@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import Header from '../../components/Header'
@@ -5,94 +6,75 @@ import Banner from '../../components/Banner'
 import Card from '../../components/Card'
 import Footer from '../../components/Footer'
 
-import sushiImg from '../../assets/images/suschi.png'
-import macarraoImg from '../../assets/images/macarrao.png'
-
 import { Container, List } from './styles'
 
+type ApiRestaurant = {
+  id: number
+  titulo: string
+  destacado: boolean
+  tipo: string
+  avaliacao: number
+  descricao: string
+  capa: string
+}
+
 const Home = () => {
+  const [restaurants, setRestaurants] = useState<ApiRestaurant[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      try {
+        const response = await fetch('https://api-ebac.vercel.app/api/efood/restaurantes')
+
+        if (!response.ok) {
+          throw new Error('Falha ao carregar restaurantes')
+        }
+
+        const data = (await response.json()) as ApiRestaurant[]
+        setRestaurants(data)
+      } catch (error) {
+        setHasError(true)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadRestaurants()
+  }, [])
+
   return (
     <>
       <Header />
       <Banner />
 
       <Container>
-        <List>
-          <Link to="/restaurant" style={{ textDecoration: 'none' }}>
-            <Card
-              title="Hioki Sushi"
-              description="Peça já o melhor da culinária japonesa no conforto da sua casa!
-              Sushis frescos, sashimis deliciosos e pratos quentes irresistíveis.
-              Entrega rápida, embalagens cuidadosas e qualidade garantida.
-              Experimente o Japão sem sair do lar com nosso delivery!"
-              image={sushiImg}    
-              rating={4.9}
-              badges={['Destaque da semana', 'Japonesa']}
+        {isLoading && <p>Carregando restaurantes...</p>}
+        {hasError && <p>Não foi possível carregar os restaurantes.</p>}
 
-            />
-          </Link>
-
-          <Link to="/restaurant" style={{ textDecoration: 'none' }}>
-            <Card
-              title="La Dolce Vita Trattoria"
-              description="A La Dolce Vita Trattoria leva a autêntica cozinha italiana até você!
-              Desfrute de massas caseiras, pizzas deliciosas e risotos incríveis, tudo no conforto do seu lar.
-              Entrega rápida, pratos bem embalados e sabor inesquecível. Peça já!"
-              image={macarraoImg}
-              rating={4.6}
-              badges={['italiana']}
-              
-            />
-          </Link>
-
-          <Link to="/restaurant" style={{ textDecoration: 'none' }}>
-            <Card
-              title="La Dolce Vita Trattoria"
-              description="A La Dolce Vita Trattoria leva a autêntica cozinha italiana até você!
-              Desfrute de massas caseiras, pizzas deliciosas e risotos incríveis, tudo no conforto do seu lar.
-              Entrega rápida, pratos bem embalados e sabor inesquecível. Peça já!"
-              image={macarraoImg}
-              rating={4.6}
-              badges={['italiana']}
-            />
-          </Link>
-
-          <Link to="/restaurant" style={{ textDecoration: 'none' }}>
-            <Card
-              title="La Dolce Vita Trattoria"
-              description="A La Dolce Vita Trattoria leva a autêntica cozinha italiana até você!
-              Desfrute de massas caseiras, pizzas deliciosas e risotos incríveis, tudo no conforto do seu lar.
-              Entrega rápida, pratos bem embalados e sabor inesquecível. Peça já!"
-              image={macarraoImg}
-              rating={4.6}
-              badges={['italiana']}
-            />
-          </Link>
-
-          <Link to="/restaurant" style={{ textDecoration: 'none' }}>
-            <Card
-              title="La Dolce Vita Trattoria"
-              description="A La Dolce Vita Trattoria leva a autêntica cozinha italiana até você!
-              Desfrute de massas caseiras, pizzas deliciosas e risotos incríveis, tudo no conforto do seu lar.
-              Entrega rápida, pratos bem embalados e sabor inesquecível. Peça já!"
-              image={macarraoImg}
-              rating={4.6}
-              badges={['italiana']}
-            />
-          </Link>
-
-          <Link to="/restaurant" style={{ textDecoration: 'none' }}>
-            <Card
-              title="La Dolce Vita Trattoria"
-              description="A La Dolce Vita Trattoria leva a autêntica cozinha italiana até você!
-              Desfrute de massas caseiras, pizzas deliciosas e risotos incríveis, tudo no conforto do seu lar.
-              Entrega rápida, pratos bem embalados e sabor inesquecível. Peça já!"
-              image={macarraoImg}
-              rating={4.6}
-              badges={['italiana']}
-            />
-          </Link>
-        </List>
+        {!isLoading && !hasError && (
+          <List>
+            {restaurants.map((restaurant) => (
+              <Link
+                key={restaurant.id}
+                to={`/restaurant/${restaurant.id}`}
+                style={{ textDecoration: 'none' }}
+              >
+                <Card
+                  title={restaurant.titulo}
+                  description={restaurant.descricao}
+                  image={restaurant.capa}
+                  rating={restaurant.avaliacao}
+                  badges={[
+                    ...(restaurant.destacado ? ['Destaque da semana'] : []),
+                    restaurant.tipo
+                  ]}
+                />
+              </Link>
+            ))}
+          </List>
+        )}
       </Container>
 
       <Footer />
